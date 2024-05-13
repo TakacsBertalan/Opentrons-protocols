@@ -289,15 +289,8 @@ def run(protocol_context):
     protocol_context.delay(minutes=3)
 
     #23. Áthelyez egy tiszta plate-be. - mehet középre
-    row_counter = 0
     for target, dest in zip(samples, output):
         p300_pipette.transfer(elution_buffer_volume, target.bottom(z = 2), dest, blow_out=True, new_tip= "once")
-        """row_counter += 1
-        protocol_context.comment(str(row_counter))
-        if row_counter == len(mag_plate.columns()):
-            left_pipette.drop_tip()
-            tip_on = False
-            row_counter = 0"""
     #24. Hegyet kidob minden sor után
 
     #25. Mágnesállvány le, plate a kukába.
