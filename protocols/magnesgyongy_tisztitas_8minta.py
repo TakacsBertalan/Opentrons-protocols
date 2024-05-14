@@ -16,7 +16,7 @@ Munkafolyamat:
 
 1. Tisztítandó térfogat: 20uL.
 
-1.5. Szuszpendálni 150 uL-el. 5-ször! BELEÍRNI!!
+1.5. Szuszpendálni 150 uL-el. 5-ször!
 
 2. Hozzámért gyöngy: 36uL (1.8x).
 
@@ -33,9 +33,6 @@ Kevésbé magasra
 
 
 8. ketszaz uL 80%-os alkoholt rámérni, hegyet kidob.
-8. Gyorsabban!
-8. Túlszívta
-8. Magasabbra a végét!
 
 9. 30 mp-ig inkubálni.
 
@@ -95,16 +92,9 @@ def modify_tip_position(target, offset, first_line):
         # Páros számú sorokban balra 1 mm-el
         altered_position = center_location.move(types.Point(x=-1*offset, y=0, z=0))
     return altered_position
-
-def get_values(*names):
-    import json
-    _all_values = json.loads(
-        """{"mag_mod":"magnetic module gen2","pipette_type":"p300_single_gen2","pipette_mount":"left","sample_number":8,"sample_volume":20,"bead_ratio":1.8,"elution_buffer_volume":22,"incubation_time":1,"settling_time":1,"drying_time":5}""")
-    return [_all_values[n] for n in names]
-
-
+    
 metadata = {
-    'protocolName': 'DNA Purification - 8 samples',
+    'protocolName': 'DNA Purification - 8 samples - optimalization',
     'author': 'Takács Bertalan <bertalan.takacs@deltabio.eu>',
     'source': 'Opentrons Protocol Library',
     'apiLevel': '2.14'
@@ -112,14 +102,6 @@ metadata = {
 
 
 def run(protocol_context):
-
-    [mag_mod, pipette_type, pipette_mount, sample_number, sample_volume,
-     bead_ratio, elution_buffer_volume, incubation_time, settling_time,
-     drying_time] = get_values(  # noqa: F821
-        "mag_mod", "pipette_type", "pipette_mount", "sample_number",
-        "sample_volume", "bead_ratio", "elution_buffer_volume",
-        "incubation_time", "settling_time", "drying_time"
-    )
 
     mag_deck = protocol_context.load_module(mag_mod, '1')
     mag_plate = mag_deck.load_labware(
@@ -173,11 +155,10 @@ def run(protocol_context):
     # Define bead and mix volume
     bead_volume = sample_volume * bead_ratio
 
-
-    #Berci
-    mix_vol = 50
     total_vol = bead_volume + sample_volume + 5
-
+    #A pipettázás sebességét adja meg
+    p300_pipette.flow_rate.aspirate = 50
+    p300_pipette.flow_rate.dispense = 50
     # Mix beads and PCR samples
     #1. Tisztítandó térfogat: 20uL.
 
@@ -187,10 +168,11 @@ def run(protocol_context):
     p300_pipette.pick_up_tip()
     p300_pipette.mix(5,150,beads)
     
+    p300_pipette.flow_rate.aspirate = 20
     for target in samples:
         #p300_pipette.pick_up_tip()
-        p300_pipette.transfer(bead_volume, beads, target, new_tip='never')
-        p300_pipette.mix(10, mix_vol, target)
+        p300_pipette.transfer(90, beads, target, new_tip='never')
+        p300_pipette.mix(10, 100, target)
         p300_pipette.blow_out()
         p300_pipette.drop_tip()
 
@@ -200,11 +182,7 @@ def run(protocol_context):
     #5. Mágnesállványt felemel. (=engage)
     mag_deck.engage(height_from_base=9)
     #6. 5 perc inkubálás.
-    protocol_context.delay(minutes=0.5)
-
-    #A pipettázás sebességét adja meg
-    p300_pipette.flow_rate.aspirate = 10
-    p300_pipette.flow_rate.dispense = 50
+    protocol_context.delay(minutes=5)
 
     #7. Leszívni 55uL-et és kidobni (hegyet is). -innentől kezdve jó lenne, ha nem pont a lyuk közepére célozná a hegyet, hanem a pellettel ellentétes oldalra
     #Tehát első sor balra
@@ -212,12 +190,9 @@ def run(protocol_context):
     p300_pipette.flow_rate.aspirate = 5
 
     for target in samples:
-        #adjusted_location = modify_tip_position(target, general_offset, "bal")
-        #Berci
 
-        p300_pipette.transfer(55, target.bottom(z = 2).move(types.Point(x=-2)), liquid_waste, blow_out=True)
+        p300_pipette.transfer(139, target.bottom(z = 2).move(types.Point(x=-2)), liquid_waste, blow_out=True)
 
-    p300_pipette.flow_rate.aspirate = 10
     #8. ketszaz uL 80%-os alkoholt rámérni, hegyet kidob.
 
     #9. 30 mp-ig inkubálni.
@@ -232,25 +207,25 @@ def run(protocol_context):
     p300_pipette.flow_rate.aspirate = 50
     for cycle in range(2):
         for target in samples:
-            #adjusted_location = modify_tip_position(target, general_offset, "bal")
-            # Berci
-            p300_pipette.transfer(200, ethanol, target.top(z = -1),
+            p300_pipette.transfer(180, ethanol, target.top(z = -1),
                              new_tip='once')
         protocol_context.delay(seconds = 30)
+        p300_pipette.flow_rate.aspirate = 30
         p300_pipette.transfer(200, target.bottom(z = 2).move(types.Point(x=-2)), liquid_waste)
 
     p300_pipette.flow_rate.aspirate = 10
 
+    #ÁLLJ!
+    protocol_context.pause("Fugálás. Helyezd vissza a plate-et, majd nyomd meg a gombot a folytatáshoz")
+    protocol_context.delay(minutes=1)
+    
     #14. 10uL-es hegy-el leszívni a maradékot, hegyet kidob.
-    #Mélyebbre a hegyet!
+
     for target in samples:
-        #adjusted_location = modify_tip_position(target, general_offset, "bal")
         p20_pipette.transfer(10, target.bottom(z = 1).move(types.Point(x=-2)), liquid_waste, new_tip= "always")
-
-
     #15. 3 perc inkubálás mágnesállvánnyal fent
-    #Berci
-    protocol_context.delay(minutes=0.5)
+
+    protocol_context.delay(minutes=3)
 
     #Itt jó lenne, ha csak akkor menne tovább a protokoll, ha én már úgy látom, hogy lehet. (Marci)
     protocol_context.pause("A folytatáshoz nyomja meg a gombot")
@@ -258,10 +233,6 @@ def run(protocol_context):
     #16. Mágnesállványt le. (=disengage)
     mag_deck.disengage()
 
-    #
-    #Berci
-
-    mix_vol = 20
     #17. 22uL AG-MilliQ rámérése. - itt a pellettel megegyező oldalra közelíthet
     #Tehát első sor jobbra, utána váltakozva
     counter = 0
@@ -270,11 +241,11 @@ def run(protocol_context):
         # Berci
         p300_pipette.pick_up_tip()
         p300_pipette.transfer(
-            elution_buffer_volume, elution_buffer, target.bottom(z = 2).move(types.Point(x=2)), new_tip='never')
+            52, elution_buffer, target.bottom(z = 2).move(types.Point(x=1)), new_tip='never')
     # 18. 10 alkalommal Fel-le pipettáz 20uL-et, hegyet kidob.
         #Felszívás 2-szer ilyen gyors
         p300_pipette.flow_rate.aspirate = 20
-        p300_pipette.mix(10, mix_vol, target.bottom(z = 2).move(types.Point(x=2)))
+        p300_pipette.mix(10, 50, target.bottom(z = 2).move(types.Point(x=1)))
         p300_pipette.drop_tip()
         
     p300_pipette.flow_rate.aspirate = 10
@@ -290,7 +261,7 @@ def run(protocol_context):
 
     #23. Áthelyez egy tiszta plate-be. - mehet középre
     for target, dest in zip(samples, output):
-        p300_pipette.transfer(elution_buffer_volume, target.bottom(z = 2), dest, blow_out=True, new_tip= "once")
+        p300_pipette.transfer(50, target.bottom(z = 2.5).move(types.Point(x=-1)), dest, blow_out=True, new_tip= "once")
     #24. Hegyet kidob minden sor után
 
     #25. Mágnesállvány le, plate a kukába.
