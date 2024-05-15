@@ -9,7 +9,7 @@ from opentrons import types
 metadata = {
     'protocolName': 'Pickup tip test',
     'author': 'Takács Bertalan <bertalan.takacs@deltabio.eu>',
-    'source': 'Opentrons Protocol Library',
+    'source': 'DeltaBio',
     'apiLevel': '2.14'
 }
 
