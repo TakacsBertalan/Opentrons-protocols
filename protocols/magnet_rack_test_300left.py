@@ -9,7 +9,7 @@ from opentrons import types
 metadata = {
     'protocolName': 'Testing the magnet rack - P300 on left',
     'author': 'Takács Bertalan <bertalan.takacs@deltabio.eu>',
-    'source': 'Opentrons Protocol Library',
+    'source': 'DeltaBio',
     'apiLevel': '2.14'
 }
 
