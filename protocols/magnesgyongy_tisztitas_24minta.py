@@ -104,7 +104,7 @@ def modify_tip_position(target, xoffset, zoffset, toporbottom, first_line):
 metadata = {
     'protocolName': 'DNA Purification - 24 samples - optimalization',
     'author': 'Takács Bertalan <bertalan.takacs@deltabio.eu>',
-    'source': 'Opentrons Protocol Library',
+    'source': 'DeltaBio',
     'apiLevel': '2.14'
 }
 
