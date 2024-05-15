@@ -112,7 +112,7 @@ metadata = {
 def run(protocol_context):
 
     sample_number = 24
-    mag_deck = protocol_context.load_module(mag_mod, '1')
+    mag_deck = protocol_context.load_module("magnetic module gen2", '1')
     mag_plate = mag_deck.load_labware(
         'biorad_96_wellplate_200ul_pcr')
     output_plate = protocol_context.load_labware(
@@ -143,8 +143,6 @@ def run(protocol_context):
         mount="left",
         tip_racks=tipracks_200)
 
-    mode = pipette_type.split('_')[1]
-    #p300_pipette.well_bottom_clearance.dispense = 2
 
     reagent_container = protocol_context.load_labware(
         'nest_12_reservoir_15ml', '4')
